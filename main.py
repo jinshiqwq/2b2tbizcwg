@@ -1,24 +1,37 @@
-from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
+import aiohttp
+from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
-@register("helloworld", "YourName", "一个简单的 Hello World 插件", "1.0.0")
-class MyPlugin(Star):
+@register("cwg", "jinshiqwq", "查询2b2t.biz群违规记录", "1.0.0", "")
+class CwgPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
 
-    async def initialize(self):
-        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
-    
-    # 注册指令的装饰器。指令名为 helloworld。注册成功后，发送 `/helloworld` 就会触发这个指令，并回复 `你好, {user_name}!`
-    @filter.command("helloworld")
-    async def helloworld(self, event: AstrMessageEvent):
-        """这是一个 hello world 指令""" # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
-        user_name = event.get_sender_name()
-        message_str = event.message_str # 用户发的纯文本消息字符串
-        message_chain = event.get_messages() # 用户所发的消息的消息链 # from astrbot.api.message_components import *
-        logger.info(message_chain)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {message_str}!") # 发送一条纯文本消息
+    @filter.command("cwg")
+    async def cwg_command(self, event: AstrMessageEvent):
+        """查询2b2t.biz群违规记录"""
+        args = event.message_str.split()
+        if len(args) != 2:          # 第一个是指令本身，第二个是 QQ 号
+            yield event.plain_result("用法：cwg <QQ号>")
+            return
+
+        qq = args[1].strip()
+        url = f"http://wg.2b2t.biz/cx.php?qq={qq}"
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url) as resp:
+                    if resp.status != 200:
+                        yield event.plain_result(f"请求失败，HTTP 状态码：{resp.status}")
+                        return
+                    text = await resp.text(encoding="utf-8")
+                    yield event.plain_result(text.strip())
+        except Exception as e:
+            logger.exception("cwg 查询异常")
+            yield event.plain_result(f"查询出错：{e}")
 
     async def terminate(self):
-        """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+        """插件卸载时调用（可选）"""
+        pass
