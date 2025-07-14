@@ -1,9 +1,5 @@
-# helloworld
+# 2b2tbizcwg
 
-AstrBot 插件模板
+2b2t.biz群聊违规记录查询插件
+3A大作 AI写的
 
-A template plugin for AstrBot plugin feature
-
-# 支持
-
-[帮助文档](https://astrbot.app)
